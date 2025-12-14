@@ -28,23 +28,16 @@ public class Main {
           new BufferedReader(
               new InputStreamReader(clientSocket.getInputStream())
           );
-      String requestLine = bufferedReader.readLine();
-      String[] requestLineArr = requestLine.split(" ");
-      String requestPath = "http://localhost:4221";
-      requestPath += requestLineArr[1];
-
       BufferedWriter bufferedWriter =
           new BufferedWriter(
               new OutputStreamWriter(clientSocket.getOutputStream())
           );
 
-      if (requestLineArr[1].equals("/")) {
-        bufferedWriter.write("HTTP/1.1 200 OK\r\n\r\n");
-      } else {
-        bufferedWriter.write("HTTP/1.1 404 Not Found\r\n\r\n");
-      }
+      Request request = new Request(bufferedReader);
+      Response response = new Response(bufferedWriter);
 
-      bufferedWriter.flush();
+      response.response(request);
+
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     }
