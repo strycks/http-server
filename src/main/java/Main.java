@@ -1,6 +1,7 @@
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -23,12 +24,27 @@ public class Main {
       Socket clientSocket = serverSocket.accept(); // Wait for connection from client.
       System.out.println("accepted new connection");
 
-      OutputStreamWriter outputStreamWriter =
-          new OutputStreamWriter(clientSocket.getOutputStream());
-      BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-      bufferedWriter.write("HTTP/1.1 200 OK\r\n\r\n");
-      bufferedWriter.flush();
+      BufferedReader bufferedReader =
+          new BufferedReader(
+              new InputStreamReader(clientSocket.getInputStream())
+          );
+      String requestLine = bufferedReader.readLine();
+      String[] requestLineArr = requestLine.split(" ");
+      String requestPath = "http://localhost:4221";
+      requestPath += requestLineArr[1];
 
+      BufferedWriter bufferedWriter =
+          new BufferedWriter(
+              new OutputStreamWriter(clientSocket.getOutputStream())
+          );
+
+      if (requestLineArr[1].equals("/")) {
+        bufferedWriter.write("HTTP/1.1 200 OK\r\n\r\n");
+      } else {
+        bufferedWriter.write("HTTP/1.1 404 Not Found\r\n\r\n");
+      }
+
+      bufferedWriter.flush();
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     }
