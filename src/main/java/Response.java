@@ -31,22 +31,25 @@ public class Response {
   /**
    * Response to a request. Provided that current writer is its writer.
    */
-  public void response(Request request) throws IOException {
+  public void responseTo(Request request) throws IOException {
     header = "";
     body = "";
+    protocol = "HTTP/1.1";
     String[] targets = request.getRequestTarget().split("/");
     System.out.println(Arrays.toString(targets));
     if (targets.length == 0) {
-      protocol = "HTTP/1.1";
       statusCode = StatusCode.OK;
     } else if (targets.length >= 2 && targets[targets.length - 2].equals("echo")) {
-      protocol = "HTTP/1.1";
       statusCode = StatusCode.OK;
       header += "Content-Type: text/plain\r\n";
       header += "Content-Length: " + targets[targets.length - 1].length() + "\r\n";
       body += targets[targets.length - 1];
+    } else if (targets[targets.length - 1].equals("user-agent")) {
+      statusCode = StatusCode.OK;
+      header += "Content-Type: text/plain\r\n";
+      header += "Content-Length: " + request.getUserAgent().length() + "\r\n";
+      body += request.getUserAgent();
     } else {
-      protocol = "HTTP/1.1";
       statusCode = StatusCode.NOT_FOUND;
     }
     response();

@@ -32,11 +32,13 @@ public class Main {
           new BufferedWriter(
               new OutputStreamWriter(clientSocket.getOutputStream())
           );
-
       Request request = new Request(bufferedReader);
       Response response = new Response(bufferedWriter);
 
-      response.response(request);
+      response.responseTo(request);
+
+      bufferedReader.close();
+      bufferedWriter.close();
       clientSocket.close();
       serverSocket.close();
     } catch (IOException e) {
