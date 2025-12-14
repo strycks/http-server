@@ -37,7 +37,8 @@ public class Main {
       Response response = new Response(bufferedWriter);
 
       response.response(request);
-
+      clientSocket.close();
+      serverSocket.close();
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     }
