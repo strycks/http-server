@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -11,6 +12,7 @@ public class Request {
   protected String requestTarget = "";
   protected String protocol = "";
   protected String userAgent = "";
+  protected List<String> compressions = new ArrayList<>();
   protected int contentLength = 0;
   protected byte[] body = null;
   protected BufferedReader bufferedReader = null;
@@ -28,7 +30,10 @@ public class Request {
       if (line.toLowerCase().startsWith("user-agent: ")) {
         userAgent = line.substring("user-agent: ".length());
       } else if (line.toLowerCase().startsWith("content-length: ")) {
-        contentLength = Integer.parseInt(line.substring("content-length: ".length()).trim());
+        contentLength = Integer.parseInt(line.substring("content-length: ".length()));
+      } else if (line.toLowerCase().startsWith("accept-encoding: ")) {
+        compressions = Arrays.asList(line.substring("accept-encoding: ".length()).split(","));
+        compressions.replaceAll(String::trim);
       }
     }
     if (requestHeaders.isEmpty()) {
@@ -64,5 +69,9 @@ public class Request {
 
   public byte[] getBody() {
     return body;
+  }
+
+  public List<String> getCompressions() {
+    return compressions;
   }
 }

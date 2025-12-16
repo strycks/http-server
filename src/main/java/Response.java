@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 /**
  * Respond to client's request.
@@ -17,6 +16,7 @@ public class Response {
   protected String body = "";
   protected String storagePath = "";
   protected BufferedWriter bufferedWriter;
+  protected final String[] availableCompressions = {"gzip"};
 
   /**
    * Construct a response, attach client's writer to it.
@@ -91,6 +91,10 @@ public class Response {
         } else {
           statusCode = StatusCode.NOT_FOUND;
         }
+    }
+    if (request.getCompressions().contains(availableCompressions[0])
+        && statusCode == StatusCode.OK) {
+      header += "Content-Encoding: " + availableCompressions[0];
     }
     response();
   }
