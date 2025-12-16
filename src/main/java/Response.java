@@ -105,7 +105,7 @@ public class Response {
         }
     }
     if (request.getCompressions().contains(availableCompressions[0])
-        && statusCode == StatusCode.OK && contentLen != -1) {
+        && statusCode == StatusCode.OK) {
       ByteArrayOutputStream baos = null;
       GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos = new ByteArrayOutputStream());
       gzipOutputStream.write(body);
@@ -117,6 +117,8 @@ public class Response {
       contentLen = body.length;
       header += "Content-Length: " + contentLen + "\r\n";
       header += "Content-Encoding: " + availableCompressions[0] + "\r\n";
+    } else if (contentLen != -1) {
+      header += "Content-Length: " + contentLen + "\r\n";
     }
     response();
   }
