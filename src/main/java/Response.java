@@ -94,7 +94,7 @@ public class Response {
     }
     if (request.getCompressions().contains(availableCompressions[0])
         && statusCode == StatusCode.OK) {
-      header += "Content-Encoding: " + availableCompressions[0];
+      header += "Content-Encoding: " + availableCompressions[0] + "\r\n";
     }
     response();
   }
