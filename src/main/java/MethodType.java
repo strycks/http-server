@@ -3,5 +3,6 @@
  */
 public enum MethodType {
   GET,
-  HEAD
+  HEAD,
+  POST
 }

@@ -12,7 +12,7 @@ public class Request {
   protected String protocol = "";
   protected String userAgent = "";
   protected int contentLength = 0;
-  protected char[] body = null;
+  protected byte[] body = null;
   protected BufferedReader bufferedReader = null;
 
   /**
@@ -35,9 +35,9 @@ public class Request {
       return;
     }
     if (contentLength > 0) {
-      body = new char[contentLength];
+      body = new byte[contentLength];
       for (int i = 0; i < contentLength; i++) {
-        body[i] = (char) bufferedReader.read();
+        body[i] = (byte) bufferedReader.read();
       }
     }
     String[] requestLineArgs = requestHeaders.getFirst().split(" ");
@@ -60,5 +60,9 @@ public class Request {
 
   public String getUserAgent() {
     return userAgent;
+  }
+
+  public byte[] getBody() {
+    return body;
   }
 }
