@@ -35,16 +35,17 @@ public class Response {
     header = "";
     body = "";
     protocol = "HTTP/1.1";
-    String[] targets = request.getRequestTarget().split("/");
-    System.out.println(Arrays.toString(targets));
-    if (targets.length == 0) {
+    String target = request.getRequestTarget();
+
+    if (target.equals("/")) {
       statusCode = StatusCode.OK;
-    } else if (targets.length >= 2 && targets[targets.length - 2].equals("echo")) {
+    } else if (target.startsWith("/echo/")) {
+      String str = target.replaceFirst("/echo/", "");
       statusCode = StatusCode.OK;
       header += "Content-Type: text/plain\r\n";
-      header += "Content-Length: " + targets[targets.length - 1].length() + "\r\n";
-      body += targets[targets.length - 1];
-    } else if (targets[targets.length - 1].equals("user-agent")) {
+      header += "Content-Length: " + str.length() + "\r\n";
+      body += str;
+    } else if (target.startsWith("/user-agent")) {
       statusCode = StatusCode.OK;
       header += "Content-Type: text/plain\r\n";
       header += "Content-Length: " + request.getUserAgent().length() + "\r\n";

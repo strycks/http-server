@@ -10,7 +10,9 @@ public class Request {
   protected MethodType methodType = MethodType.GET;
   protected String requestTarget = "";
   protected String protocol = "";
-  protected String userAgent = null;
+  protected String userAgent = "";
+  protected int contentLength = 0;
+  protected char[] body = null;
   protected BufferedReader bufferedReader = null;
 
   /**
@@ -18,11 +20,27 @@ public class Request {
    */
   public Request(BufferedReader bufferedReader) throws IOException {
     this.bufferedReader = bufferedReader;
-    String line = bufferedReader.readLine();
-    if (line == null) {
+    String line = null;
+    List<String> requestHeaders = new ArrayList<>();
+    while ((line = bufferedReader.readLine()) != null && !line.isEmpty()) {
+      line = line.trim();
+      requestHeaders.add(line);
+      if (line.toLowerCase().startsWith("user-agent: ")) {
+        userAgent = line.substring("user-agent: ".length());
+      } else if (line.toLowerCase().startsWith("content-length: ")) {
+        contentLength = Integer.parseInt(line.substring("content-length: ".length()).trim());
+      }
+    }
+    if (requestHeaders.isEmpty()) {
       return;
     }
-    String[] requestLineArgs = line.split(" ");
+    if (contentLength > 0) {
+      body = new char[contentLength];
+      for (int i = 0; i < contentLength; i++) {
+        body[i] = (char) bufferedReader.read();
+      }
+    }
+    String[] requestLineArgs = requestHeaders.getFirst().split(" ");
     methodType = MethodType.valueOf(requestLineArgs[0]);
     requestTarget = requestLineArgs[1];
     protocol = requestLineArgs[2];
@@ -40,17 +58,7 @@ public class Request {
     return protocol;
   }
 
-  /**
-   * return userAgent or read until userAgent appears.
-   */
-  public String getUserAgent() throws IOException {
-    if (userAgent == null && bufferedReader != null) {
-      String line = bufferedReader.readLine();
-      while (!line.contains("User-Agent: ")) {
-        line = bufferedReader.readLine();
-      }
-      userAgent = line.split(" ")[1];
-    }
+  public String getUserAgent() {
     return userAgent;
   }
 }
