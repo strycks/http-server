@@ -19,20 +19,25 @@ public class Main {
    * Main method.
    */
   public static void main(String[] args) {
-    ServerSocket serverSocket = null;
-    ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-    AtomicInteger completed = new AtomicInteger();
-    AtomicInteger started = new AtomicInteger();
-    try {
-      serverSocket = new ServerSocket(4221, 250);
+    final AtomicInteger completed = new AtomicInteger();
+    final AtomicInteger started = new AtomicInteger();
 
+    final String path;
+    if (args.length == 2 && args[0].equals("--directory")) {
+      path = args[1];
+    } else {
+      path = "";
+    }
+
+    try (ServerSocket serverSocket = new ServerSocket(4221, 250);
+         ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()
+    ) {
       // Since the tester restarts your program quite often, setting SO_REUSEADDR
       // ensures that we don't run into 'Address already in use' errors
       serverSocket.setReuseAddress(true);
 
       while (true) {
         Socket clientSocket = serverSocket.accept();
-
         FutureTask<Void> task = new FutureTask<>(() -> {
           try (Socket socket = clientSocket;
                BufferedReader bufferedReader =
@@ -44,15 +49,15 @@ public class Main {
                        new OutputStreamWriter(clientSocket.getOutputStream())
                    );
                ) {
-            System.out.println("accepted new connection" + started.getAndIncrement());
-
+            System.out.println("accepted new connection " + started.getAndIncrement());
 
             Request request = new Request(bufferedReader);
             Response response = new Response(bufferedWriter);
+            response.setStoragePath(path);
 
             response.responseTo(request);
 
-            System.out.println(completed.getAndIncrement());
+            System.out.println("completed connection " + completed.getAndIncrement());
           } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
           }
@@ -67,15 +72,6 @@ public class Main {
       }
     } catch (IOException e) {
       System.err.println("IOException: " + e.getMessage());
-    } finally {
-      executorService.close();
-      try {
-        if (serverSocket != null) {
-          serverSocket.close();
-        }
-      } catch (IOException e) {
-        System.err.println("IOException: " + e.getMessage());
-      }
     }
   }
 }

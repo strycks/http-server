@@ -1,5 +1,8 @@
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -10,6 +13,7 @@ public class Response {
   protected StatusCode statusCode;
   protected String header = "";
   protected String body = "";
+  protected String storagePath = "";
   protected BufferedWriter bufferedWriter;
 
   /**
@@ -50,6 +54,20 @@ public class Response {
       header += "Content-Type: text/plain\r\n";
       header += "Content-Length: " + request.getUserAgent().length() + "\r\n";
       body += request.getUserAgent();
+    } else if (target.startsWith("/files/")) {
+      String str = target.replaceFirst("/files/", "");
+      File file = new File(storagePath + str);
+      if (file.exists() && file.isFile()) {
+        statusCode = StatusCode.OK;
+        header += "Content-Type: application/octet-stream\r\n";
+        header += "Content-Length: " + file.length() + "\r\n";
+        FileInputStream fileInputStream = new FileInputStream(file);
+        byte[] binary = fileInputStream.readAllBytes();
+        body += new String(binary, StandardCharsets.US_ASCII);
+        fileInputStream.close();
+      } else {
+        statusCode = StatusCode.NOT_FOUND;
+      }
     } else {
       statusCode = StatusCode.NOT_FOUND;
     }
@@ -94,5 +112,13 @@ public class Response {
 
   public void setBufferedWriter(BufferedWriter bufferedWriter) {
     this.bufferedWriter = bufferedWriter;
+  }
+
+  public String getStoragePath() {
+    return storagePath;
+  }
+
+  public void setStoragePath(String storagePath) {
+    this.storagePath = storagePath;
   }
 }
