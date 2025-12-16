@@ -39,20 +39,11 @@ public class Main {
       while (true) {
         Socket clientSocket = serverSocket.accept();
         FutureTask<Void> task = new FutureTask<>(() -> {
-          try (Socket socket = clientSocket;
-               BufferedReader bufferedReader =
-                   new BufferedReader(
-                       new InputStreamReader(clientSocket.getInputStream())
-                   );
-               BufferedWriter bufferedWriter =
-                   new BufferedWriter(
-                       new OutputStreamWriter(clientSocket.getOutputStream())
-                   );
-               ) {
+          try (Socket socket = clientSocket) {
             System.out.println("accepted new connection " + started.getAndIncrement());
 
-            Request request = new Request(bufferedReader);
-            Response response = new Response(bufferedWriter);
+            Request request = new Request(clientSocket);
+            Response response = new Response(clientSocket);
             response.setStoragePath(path);
 
             response.responseTo(request);

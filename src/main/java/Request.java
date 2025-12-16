@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,13 +17,16 @@ public class Request {
   protected List<String> compressions = new ArrayList<>();
   protected int contentLength = 0;
   protected byte[] body = null;
-  protected BufferedReader bufferedReader = null;
+  protected Socket socket = null;
 
   /**
    * Constructor with reader from client's socket stream.
    */
-  public Request(BufferedReader bufferedReader) throws IOException {
-    this.bufferedReader = bufferedReader;
+  public Request(Socket socket) throws IOException {
+    this.socket = socket;
+    BufferedReader bufferedReader =
+        new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
     String line = null;
     List<String> requestHeaders = new ArrayList<>();
     while ((line = bufferedReader.readLine()) != null && !line.isEmpty()) {
@@ -37,6 +42,7 @@ public class Request {
       }
     }
     if (requestHeaders.isEmpty()) {
+      bufferedReader.close();
       return;
     }
     if (contentLength > 0) {
