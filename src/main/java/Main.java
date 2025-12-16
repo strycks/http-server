@@ -5,6 +5,11 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Main class.
@@ -15,32 +20,42 @@ public class Main {
    */
   public static void main(String[] args) {
     try {
+      ExecutorService executorService = Executors.newCachedThreadPool(runnable -> {
+        Thread thread = new Thread(runnable);
+        thread.setDaemon(true);
+        return thread;
+      });
+
       ServerSocket serverSocket = new ServerSocket(4221);
 
       // Since the tester restarts your program quite often, setting SO_REUSEADDR
       // ensures that we don't run into 'Address already in use' errors
       serverSocket.setReuseAddress(true);
 
-      Socket clientSocket = serverSocket.accept(); // Wait for connection from client.
-      System.out.println("accepted new connection");
+      while (true) {
+        Socket clientSocket = serverSocket.accept();
+        System.out.println("accepted new connection");
+        FutureTask<Void> task = new FutureTask<>(() -> {
+          BufferedReader bufferedReader =
+              new BufferedReader(
+                  new InputStreamReader(clientSocket.getInputStream())
+              );
+          BufferedWriter bufferedWriter =
+              new BufferedWriter(
+                  new OutputStreamWriter(clientSocket.getOutputStream())
+              );
+          Request request = new Request(bufferedReader);
+          Response response = new Response(bufferedWriter);
 
-      BufferedReader bufferedReader =
-          new BufferedReader(
-              new InputStreamReader(clientSocket.getInputStream())
-          );
-      BufferedWriter bufferedWriter =
-          new BufferedWriter(
-              new OutputStreamWriter(clientSocket.getOutputStream())
-          );
-      Request request = new Request(bufferedReader);
-      Response response = new Response(bufferedWriter);
+          response.responseTo(request);
 
-      response.responseTo(request);
-
-      bufferedReader.close();
-      bufferedWriter.close();
-      clientSocket.close();
-      serverSocket.close();
+          bufferedReader.close();
+          bufferedWriter.close();
+          clientSocket.close();
+          return null;
+        });
+        executorService.submit(task);
+      }
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
     }
