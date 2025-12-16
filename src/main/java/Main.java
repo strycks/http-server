@@ -19,14 +19,10 @@ public class Main {
    * Main method.
    */
   public static void main(String[] args) {
+    ServerSocket serverSocket = null;
+    ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
     try {
-      ExecutorService executorService = Executors.newCachedThreadPool(runnable -> {
-        Thread thread = new Thread(runnable);
-        thread.setDaemon(true);
-        return thread;
-      });
-
-      ServerSocket serverSocket = new ServerSocket(4221);
+      serverSocket = new ServerSocket(4221);
 
       // Since the tester restarts your program quite often, setting SO_REUSEADDR
       // ensures that we don't run into 'Address already in use' errors
@@ -35,6 +31,7 @@ public class Main {
       while (true) {
         Socket clientSocket = serverSocket.accept();
         System.out.println("accepted new connection");
+
         FutureTask<Void> task = new FutureTask<>(() -> {
           BufferedReader bufferedReader =
               new BufferedReader(
@@ -54,10 +51,20 @@ public class Main {
           clientSocket.close();
           return null;
         });
+
         executorService.submit(task);
       }
     } catch (IOException e) {
       System.out.println("IOException: " + e.getMessage());
+    } finally {
+      executorService.close();
+      try {
+        if (serverSocket != null) {
+          serverSocket.close();
+        }
+      } catch (IOException e) {
+        System.out.println("IOException: " + e.getMessage());
+      }
     }
   }
 }
