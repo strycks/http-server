@@ -41,13 +41,16 @@ public class Main {
         FutureTask<Void> task = new FutureTask<>(() -> {
           try (Socket socket = clientSocket) {
             System.out.println("accepted new connection " + started.getAndIncrement());
-
+            socket.setSoTimeout(5 * 1000); // set read timeout to be 5 sec
             Request request = new Request(clientSocket);
             Response response = new Response(clientSocket);
             response.setStoragePath(path);
-
-            response.responseTo(request);
-
+            while (!socket.isClosed()) {
+              request.parseRequest();
+              if (request.isReady()) {
+                response.responseTo(request);
+              }
+            }
             System.out.println("completed connection " + completed.getAndIncrement());
           } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());

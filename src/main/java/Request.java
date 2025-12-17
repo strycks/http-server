@@ -18,18 +18,25 @@ public class Request {
   protected int contentLength = 0;
   protected byte[] body = null;
   protected Socket socket = null;
+  protected BufferedReader reader = null;
+  protected boolean ready = false;
 
   /**
    * Constructor with reader from client's socket stream.
    */
   public Request(Socket socket) throws IOException {
     this.socket = socket;
-    BufferedReader bufferedReader =
-        new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+  }
 
-    String line = null;
+  /**
+   * Parse request.
+   */
+  public void parseRequest() throws IOException {
+    String line = reader.readLine();
+    clean();
     List<String> requestHeaders = new ArrayList<>();
-    while ((line = bufferedReader.readLine()) != null && !line.isEmpty()) {
+    do {
       line = line.trim();
       requestHeaders.add(line);
       if (line.toLowerCase().startsWith("user-agent: ")) {
@@ -39,22 +46,36 @@ public class Request {
       } else if (line.toLowerCase().startsWith("accept-encoding: ")) {
         compressions = Arrays.asList(line.substring("accept-encoding: ".length()).split(","));
         compressions.replaceAll(String::trim);
+      } else if (line.toLowerCase().startsWith("connection: close")) {
+        socket.close();
+        return;
       }
-    }
+    } while ((line = reader.readLine()) != null && !line.isEmpty());
     if (requestHeaders.isEmpty()) {
-      bufferedReader.close();
       return;
     }
     if (contentLength > 0) {
       body = new byte[contentLength];
       for (int i = 0; i < contentLength; i++) {
-        body[i] = (byte) bufferedReader.read();
+        body[i] = (byte) reader.read();
       }
     }
+    ready = true;
     String[] requestLineArgs = requestHeaders.getFirst().split(" ");
     methodType = MethodType.valueOf(requestLineArgs[0]);
     requestTarget = requestLineArgs[1];
     protocol = requestLineArgs[2];
+  }
+
+  private void clean() {
+    methodType = MethodType.GET;
+    requestTarget = "";
+    protocol = "";
+    userAgent = "";
+    compressions = new ArrayList<>();
+    contentLength = 0;
+    body = null;
+    ready = false;
   }
 
   public MethodType getMethodType() {
@@ -79,5 +100,13 @@ public class Request {
 
   public List<String> getCompressions() {
     return compressions;
+  }
+
+  public boolean isReady() {
+    return ready;
+  }
+
+  public BufferedReader getReader() {
+    return reader;
   }
 }

@@ -113,7 +113,6 @@ public class Response {
       gzipOutputStream.close();
 
       body = baos.toByteArray();
-      System.out.println(body.length);
       contentLen = body.length;
       header += "Content-Length: " + contentLen + "\r\n";
       header += "Content-Encoding: " + availableCompressions[0] + "\r\n";
