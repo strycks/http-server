@@ -1,17 +1,11 @@
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -48,7 +42,7 @@ public class Response {
    * Response to a request. Provided that current writer is its writer.
    */
   public void responseTo(Request request) throws IOException {
-    protocol = "HTTP/1.1";
+    clean();
     String target = request.getRequestTarget();
     long contentLen = -1;
     switch (request.getMethodType()) {
@@ -120,6 +114,13 @@ public class Response {
       header += "Content-Length: " + contentLen + "\r\n";
     }
     response();
+  }
+
+  private void clean() {
+    protocol = "HTTP/1.1";
+    statusCode = StatusCode.OK;
+    header = "";
+    body = "".getBytes();
   }
 
   public String getProtocol() {
