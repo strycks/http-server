@@ -19,7 +19,7 @@ public class Request {
   protected byte[] body = null;
   protected Socket socket = null;
   protected BufferedReader reader = null;
-  protected boolean ready = false;
+  protected boolean closing = false;
 
   /**
    * Constructor with reader from client's socket stream.
@@ -47,7 +47,7 @@ public class Request {
         compressions = Arrays.asList(line.substring("accept-encoding: ".length()).split(","));
         compressions.replaceAll(String::trim);
       } else if (line.toLowerCase().startsWith("connection: close")) {
-        socket.close();
+        closing = true;
         return;
       }
     } while ((line = reader.readLine()) != null && !line.isEmpty());
@@ -60,7 +60,6 @@ public class Request {
         body[i] = (byte) reader.read();
       }
     }
-    ready = true;
     String[] requestLineArgs = requestHeaders.getFirst().split(" ");
     methodType = MethodType.valueOf(requestLineArgs[0]);
     requestTarget = requestLineArgs[1];
@@ -75,7 +74,7 @@ public class Request {
     compressions = new ArrayList<>();
     contentLength = 0;
     body = null;
-    ready = false;
+    closing = false;
   }
 
   public MethodType getMethodType() {
@@ -102,8 +101,8 @@ public class Request {
     return compressions;
   }
 
-  public boolean isReady() {
-    return ready;
+  public boolean isClosing() {
+    return closing;
   }
 
   public BufferedReader getReader() {

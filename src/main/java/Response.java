@@ -113,6 +113,11 @@ public class Response {
     } else if (contentLen != -1) {
       header += "Content-Length: " + contentLen + "\r\n";
     }
+
+    if (request.isClosing()) {
+      statusCode = StatusCode.OK;
+      header += "Connection: close\r\n";
+    }
     response();
   }
 

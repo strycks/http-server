@@ -1,8 +1,4 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -45,15 +41,16 @@ public class Main {
             Request request = new Request(clientSocket);
             Response response = new Response(clientSocket);
             response.setStoragePath(path);
-            while (!socket.isClosed()) {
+
+            while (!socket.isClosed() && !request.isClosing()) {
               request.parseRequest();
-              if (request.isReady()) {
-                response.responseTo(request);
-              }
+              response.responseTo(request);
             }
-            System.out.println("completed connection " + completed.getAndIncrement());
           } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
+            return null;
+          } finally {
+            System.out.println("completed connection " + completed.getAndIncrement());
           }
           return null;
         });
